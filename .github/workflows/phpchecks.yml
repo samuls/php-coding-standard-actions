@@ -41,12 +41,6 @@ jobs:
         phpcs_path: php phpcs.phar
         standard: phpcs.xml
 
-    - name: PHP Code Sniffer
-      uses: php-actions/phpcs@v1
-      with:
-          path: src/
-          standard: phpcs.xml
-
     - name: Run lint
       run: composer lint
 
