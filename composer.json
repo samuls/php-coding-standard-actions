@@ -1,4 +1,8 @@
 {
+    "name": "samuls/php-coding-standard-actions",
+    "description": "Support tools for check php coding standards.",
+    "type": "composer-plugin",
+    "license": "MIT",
     "require-dev": {
         "composer/composer": "^2.0",
         "overtrue/phplint": "^4.0",
