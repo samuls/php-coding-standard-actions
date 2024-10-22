@@ -2,7 +2,7 @@
 class Test {
     const PHP_VERSION = 5;
 
-    function getPhpVersion() {
+    public function phpVersion() {
         return self::PHP_VERSION;
     }
 }
