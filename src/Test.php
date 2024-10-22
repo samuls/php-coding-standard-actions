@@ -1,5 +1,7 @@
 <?php
-class Test {
+
+class Test 
+{
     const PHP_VERSION = 5;
 
     public function phpVersion() {
