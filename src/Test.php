@@ -1,8 +1,8 @@
 <?php
 
-class Test 
+class Test
 {
-    const PHP_VERSION = 5;
+    protected const PHP_VERSION = 5;
 
     protected function phpVersion()
     {
