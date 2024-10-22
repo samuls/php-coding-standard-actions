@@ -1,8 +1,8 @@
 <?php
 class Test {
-    const php_version = 5;
+    const PHP_VERSION = 5;
 
-    function get_php_version() {
-        return self::php_version;
+    function getPhpVersion() {
+        return self::PHP_VERSION;
     }
 }
