@@ -40,4 +40,5 @@
 
     <!-- The closing ?> tag MUST be omitted from files containing only PHP. -->
     <rule ref="Zend.Files.ClosingTag"/>
+    <rule ref="Zend.NamingConventions.ValidVariableName"/>
 </ruleset>
