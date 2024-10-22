@@ -1,9 +1,6 @@
 <?php
 
-function addition_of_two_number($a,$b)
-{
-    return $a+$b;
-}
+require_once('./common_functions.php');
 
 echo "welcome ZXXxx";
 $a_variable = 10;
