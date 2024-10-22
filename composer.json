@@ -1,5 +1,5 @@
 {
-    "name": "Samuls/PhpCodeStandards",
+    "name": "samuls/phpcodestandards",
     "description": "Support tools for check php coding standards.",
     "type": "composer-plugin",
     "license": "MIT",
