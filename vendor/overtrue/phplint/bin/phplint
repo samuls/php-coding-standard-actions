@@ -1,33 +1,16 @@
 #!/usr/bin/env php
 <?php
 
-if (PHP_SAPI !== 'cli' && PHP_MAJOR_VERSION < 8) {
-    echo 'Warning: phplint should be invoked via the CLI minimum version of PHP 8.0, not the '.PHP_SAPI.' SAPI'.PHP_EOL;
-}
+/*
+ * This file is part of the overtrue/phplint package
+ *
+ * (c) overtrue
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
 
-$loaded = false;
+gc_disable(); // performance boost
 
-foreach (array(__DIR__ . '/../../../autoload.php', __DIR__ . '/../vendor/autoload.php') as $file) {
-    if (file_exists($file)) {
-        require $file;
-        $loaded = true;
-        break;
-    }
-}
-
-if (!$loaded) {
-    die(
-        'You need to set up the project dependencies using the following commands:' . PHP_EOL .
-        'wget https://getcomposer.org/composer.phar' . PHP_EOL .
-        'php composer.phar install' . PHP_EOL
-    );
-}
-
-use Overtrue\PHPLint\Command\LintCommand;
-use Overtrue\PHPLint\Console\Application;
-
-// run the command application
-$application = new Application();
-$application->add(new LintCommand);
-$status = $application->run();
-exit($status);
+require_once dirname(__DIR__) . '/autoload.php';
+require_once dirname(__DIR__) . '/phplint.php';

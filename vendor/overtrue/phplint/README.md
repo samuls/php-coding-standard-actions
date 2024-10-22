@@ -1,178 +1,52 @@
+<!--suppress HtmlDeprecatedAttribute -->
 <h1 align="center">PHPLint</h1>
 
 <p align="center">`phplint` is a tool that can speed up linting of php files by running several lint processes at once.</p>
 
-![artboard 1](https://user-images.githubusercontent.com/1472352/38774811-3f780ab6-40a3-11e8-9a0a-a8d06d2c6463.jpg)
-
-[![Release Status](https://github.com/overtrue/phplint/actions/workflows/build-phar.yml/badge.svg)](https://github.com/overtrue/phplint/actions/workflows/build-phar.yml)
-[![Latest Stable Version](https://poser.pugx.org/overtrue/phplint/v/stable.svg)](https://packagist.org/packages/overtrue/phplint) [![Total Downloads](https://poser.pugx.org/overtrue/phplint/downloads.svg)](https://packagist.org/packages/overtrue/phplint) [![Latest Unstable Version](https://poser.pugx.org/overtrue/phplint/v/unstable.svg)](https://packagist.org/packages/overtrue/phplint) [![License](https://poser.pugx.org/overtrue/phplint/license.svg)](https://packagist.org/packages/overtrue/phplint)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/overtrue/phplint/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/overtrue/phplint/?branch=master)
+[![Release Status](https://github.com/overtrue/phplint/actions/workflows/release.yml/badge.svg)](https://github.com/overtrue/phplint/actions/workflows/release.yml)
+[![Latest Stable Version](https://img.shields.io/packagist/v/overtrue/phplint)](https://packagist.org/packages/overtrue/phplint)
+[![Total Downloads](https://poser.pugx.org/overtrue/phplint/downloads.svg)](https://packagist.org/packages/overtrue/phplint) 
+[![License](https://poser.pugx.org/overtrue/phplint/license.svg)](https://packagist.org/packages/overtrue/phplint)
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fovertrue%2Fphplint.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fovertrue%2Fphplint?ref=badge_shield)
 
-[![Sponsor me](https://github.com/overtrue/overtrue/blob/master/sponsor-me-button-s.svg?raw=true)](https://github.com/sponsors/overtrue)
+
+| Version | Status                                    | Requirements   |
+|:--------|:------------------------------------------|:---------------|
+| **9.x** | **Active development**                    | **PHP >= 8.1** |
+| 9.5     | Active support                            | PHP >= 8.2     |
+| 9.4     | Active support                            | PHP >= 8.1     |
+| 9.3     | Active support                            | PHP >= 8.1     |
+| 9.2     | Active support                            | PHP >= 8.1     |
+| 9.1     | Active support                            | PHP >= 8.1     |
+| 9.0     | End Of Life                               | PHP >= 8.0     |
+| 6.x     | End Of Life                               | PHP >= 8.2     |
+| 5.x     | End Of Life                               | PHP >= 8.1     |
+| 4.x     | End Of Life                               | PHP >= 8.0     |
+| 3.x     | End Of Life                               | PHP >= 7.4     |
+
+**NOTE** if you have an older version of PHP lower than 8.0, we recommend to use the latest version [3.4.0](https://github.com/overtrue/phplint/releases/tag/3.4.0)
+
+Version 9.1 is based on 9.0 code but did not support anymore PHP 8.0 that reached End-Of-Life.
+
+Major version 9.0 is a full code rewrites that have the same source code (`main` branch) for all PHP 8.x versions (`4.x`, `5.x` or `6.x`),
+with a lot of improvement, full documentation, and full unit code tested. 
 
 
-## Installation
+## Table of Contents
 
-### required
-- PHP >= 8.0
-- Composer >= 2.0
+1. [Installation](docs/installation.md#installation)
+   1. [Requirements](docs/installation.md#requirements)
+   1. [PHAR](docs/installation.md#phar)
+   1. [Docker](docs/installation.md#docker)
+   1. [Phive](docs/installation.md#phive)
+   1. [Composer](docs/installation.md#composer)
+1. [Usage](docs/README.md#usage)
+1. [Configuration](docs/configuration.md#configuration)
+1. [Upgrading](docs/upgrading.md#upgrading) 
+1. [Contributing](docs/contributing.md#contributing)
+1. [Architecture](docs/architecture/README.md#architecture)
 
-> if you are using php 7.4, please refer [the 7.4 branch](https://github.com/overtrue/phplint/tree/7.4).
->
-> if you are using php 8.1, please refer [the 8.1 branch](https://github.com/overtrue/phplint/tree/8.1).
->
-> if you are using php 8.2, please refer [the 8.2 branch](https://github.com/overtrue/phplint/tree/8.2).
-
-
-### Locally, if you have PHP
-
-```bash
-composer require overtrue/phplint: --dev -vvv
-```
-
-### Locally, if you only have Docker
-
-```bash
-docker pull overtrue/phplint:8.0
-```
-
-## Usage
-
-### CLI
-
-```text
-Description:
-  Lint something
-
-Usage:
-  phplint [options] [--] [<path>...]
-
-Arguments:
-  path                               Path to file or directory to lint.
-
-Options:
-      --exclude=EXCLUDE              Path to file or directory to exclude from linting (multiple values allowed)
-      --extensions=EXTENSIONS        Check only files with selected extensions (default: php)
-  -j, --jobs=JOBS                    Number of parraled jobs to run (default: 5)
-  -c, --configuration=CONFIGURATION  Read configuration from config file (default: ./.phplint.yml).
-      --no-configuration             Ignore default configuration file (default: ./.phplint.yml).
-      --no-cache                     Ignore cached data.
-      --cache=CACHE                  Path to the cache file.
-      --no-progress                  Hide the progress output.
-      --json[=JSON]                  Path to store JSON results.
-      --xml[=XML]                    Path to store JUnit XML results.
-  -w, --warning                      Also show warnings.
-  -q, --quiet                        Do not output any message
-      --no-files-exit-code           Throw error if no files processed.
-  -h, --help                         Display help for the given command. When no command is given display help for the list command
-  -V, --version                      Display this application version
-      --ansi|--no-ansi               Force (or disable --no-ansi) ANSI output
-  -n, --no-interaction               Do not ask any interactive question
-  -v|vv|vvv, --verbose               Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
-```
-
-example:
-
-```bash
-./vendor/bin/phplint ./ --exclude=vendor
-```
-
-You can also define configuration as a file `.phplint.yml`:
-
-```yaml
-path: ./
-jobs: 10
-cache: build/phplint.cache
-extensions:
-  - php
-exclude:
-  - vendor
-warning: false
-memory_limit: -1
-```
-
-```bash
-./vendor/bin/phplint
-```
-
-By default, the command will read configuration from file `.phplint.yml` of path specified, you can use another filename by option: `--configuration=FILENAME` or `-c FILENAME`;
-
-If you want to disable the config file, you can add option `--no-configuration`.
-
-### Docker CLI
-
-```bash
-docker run --rm -t -v "${PWD}":/workdir overtrue/phplint:8.0 ./  --exclude=vendor
-```
-
-> Please mount the code directory to `/workdir` in the container.
-
-### Program
-
-```php
-use Overtrue\PHPLint\Linter;
-
-$path = __DIR__ .'/app';
-$exclude = ['vendor'];
-$extensions = ['php'];
-$warnings = true;
-
-$linter = new Linter($path, $exclude, $extensions, $warnings);
-
-// get errors
-$errors = $linter->lint();
-
-//
-// [
-//    '/path/to/foo.php' => [
-//          'error' => "unexpected '$key' (T_VARIABLE)",
-//          'line' => 168,
-//          'file' => '/path/to/foo.php',
-//      ],
-//    '/path/to/bar.php' => [
-//          'error' => "unexpected 'class' (T_CLASS), expecting ',' or ';'",
-//          'line' => 28,
-//          'file' => '/path/to/bar.php',
-//      ],
-// ]
-```
-
-### GitHub Actions
-
-```yaml
-uses: overtrue/phplint@8.0
-with:
-  path: .
-  options: --exclude=*.log
-```
-
-### GitLab CI
-
-```yaml
-code-quality:lint-php:
-  image: overtrue/phplint:8.0
-  variables:
-    INPUT_PATH: "./"
-    INPUT_OPTIONS: "-c .phplint.yml"
-  script: echo '' #prevents ci yml parse error
-```
-
-### Other CI/CD (f.e. Bitbucket Pipelines)
-
-Run this command using `overtrue/phplint:8.0` Docker image:
-
-```bash
-/root/.composer/vendor/bin/phplint ./ --exclude=vendor
-```
-
-### Warnings
-
-Not all linting problems are errors, PHP also has warnings, for example when using a `continue` statement within a
-`switch` `case`. By default, these errors are not reported, but you can turn this on with the `warning` cli flag, or
-by setting the `warning` to true in the configuration.
-
-## :heart: Sponsor me
+## :heart: Sponsor me 
 
 [![Sponsor me](https://github.com/overtrue/overtrue/blob/master/sponsor-me.svg?raw=true)](https://github.com/sponsors/overtrue)
 

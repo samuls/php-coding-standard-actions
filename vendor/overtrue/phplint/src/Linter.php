@@ -1,166 +1,244 @@
 <?php
 
+declare(strict_types=1);
+
+/*
+ * This file is part of the overtrue/phplint package
+ *
+ * (c) overtrue
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Overtrue\PHPLint;
 
-use InvalidArgumentException;
-use Overtrue\PHPLint\Process\Lint;
+use LogicException;
+use Overtrue\PHPLint\Configuration\OptionDefinition;
+use Overtrue\PHPLint\Configuration\Resolver;
+use Overtrue\PHPLint\Event\AfterCheckingEvent;
+use Overtrue\PHPLint\Event\AfterLintFileEvent;
+use Overtrue\PHPLint\Event\BeforeCheckingEvent;
+use Overtrue\PHPLint\Event\BeforeLintFileEvent;
+use Overtrue\PHPLint\Helper\ProcessHelper;
+use Overtrue\PHPLint\Output\LinterOutput;
+use Overtrue\PHPLint\Process\LintProcess;
+use Psr\Cache\InvalidArgumentException;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\Cache\Adapter\NullAdapter;
+use Symfony\Component\Console\Helper\HelperSet;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
+use Throwable;
 
-class Linter
+use function array_chunk;
+use function array_push;
+use function count;
+use function md5_file;
+use function microtime;
+use function phpversion;
+use function strip_tags;
+use function version_compare;
+
+/**
+ * @author Overtrue
+ * @author Laurent Laville (code-rewrites since v9.0)
+ */
+final class Linter
 {
-    private ?\Closure $processCallback = null;
-    private array $files = [];
-    private array $cache = [];
-    private array $paths;
-    private array $excludes;
-    private array $extensions;
-    private int $processLimit = 5;
-    private bool $warning;
+    private Resolver $configResolver;
+    private EventDispatcherInterface $dispatcher;
+    private Cache $cache;
+    private ?HelperSet $helperSet;
+    private ?OutputInterface $output;
+    private array $results;
+    private int $processLimit;
     private string $memoryLimit;
+    private bool $warning;
 
-    public function __construct(array|string $paths, array $excludes = [], array $extensions = ['php'], $warning = false)
-    {
-        $this->paths = (array)$paths;
-        $this->excludes = $excludes;
-        $this->warning = $warning;
-        $this->extensions = \array_map(function ($extension) {
-            return \sprintf('*.%s', \ltrim($extension, '.'));
-        }, $extensions);
+    public function __construct(
+        Resolver $configResolver,
+        EventDispatcherInterface $dispatcher,
+        private readonly ?Client $client = null,
+        ?HelperSet $helperSet = null,
+        ?OutputInterface $output = null,
+    ) {
+        $this->configResolver = $configResolver;
+        $this->dispatcher = $dispatcher;
+        $this->processLimit = $configResolver->getOption(OptionDefinition::JOBS);
+        $this->memoryLimit = (string) $configResolver->getOption(OptionDefinition::OPTION_MEMORY_LIMIT);
+        $this->warning = $configResolver->getOption(OptionDefinition::WARNING);
+
+        if ($configResolver->getOption(OptionDefinition::NO_CACHE)) {
+            $adapter = new NullAdapter();
+        } else {
+            $adapter = new FilesystemAdapter('paths', 0, $configResolver->getOption(OptionDefinition::CACHE));
+        }
+        $this->cache = new Cache($adapter);
+
+        $this->results = [
+            'errors' => [],
+            'warnings' => [],
+            'hits' => [],
+            'misses' => [],
+        ];
+
+        $this->helperSet = $helperSet;
+        $this->output = $output;
     }
 
-    public function lint(array $files = [], bool $cache = true): array
+    /**
+     * @throws Throwable
+     */
+    public function lintFiles(Finder $finder, ?float $startTime = null): LinterOutput
     {
-        if (empty($files)) {
-            $files = $this->getFiles();
+        if (null === $startTime) {
+            $startTime = microtime(true);
         }
 
-        $processCallback = $this->processCallback ?? fn () => null;
+        try {
+            $fileCount = count($finder);
+        } catch (LogicException) {
+            $fileCount = 0;
+        }
 
-        $errors = [];
-        $running = [];
-        $newCache = [];
+        $this->dispatcher->dispatch(new BeforeCheckingEvent($this, ['fileCount' => $fileCount]));
 
-        while (!empty($files) || !empty($running)) {
-            for ($i = count($running); !empty($files) && $i < $this->processLimit; ++$i) {
-                $file = array_shift($files);
-                $filename = $file->getRealPath();
-                $relativePathname = $file->getRelativePathname();
-                if (!isset($this->cache[$relativePathname]) || $this->cache[$relativePathname] !== md5_file($filename)) {
-                    $lint = $this->createLintProcess($filename);
-                    $running[$filename] = [
-                        'process' => $lint,
-                        'file' => $file,
-                        'relativePath' => $relativePathname,
-                    ];
-                    $lint->start();
-                } else {
-                    $newCache[$relativePathname] = $this->cache[$relativePathname];
-                }
+        $processCount = 0;
+        if ($fileCount > 0) {
+            $results = $this->doLint($finder, $processCount);
+        } else {
+            $results = [];
+        }
+
+        if (null !== $this->client) {
+            $default = [
+                'application_version' => [
+                    'long' => $this->client->getApplication()->getLongVersion(),
+                    'short' => $this->client->getApplication()->getVersion(),
+                ]
+            ];
+        }
+        $finalResults = new LinterOutput($results, $finder);
+        $finalResults->setContext($this->configResolver, $startTime, $processCount, $default ?? []);
+
+        $this->dispatcher->dispatch(new AfterCheckingEvent($this, ['results' => $finalResults]));
+
+        return $finalResults;
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    private function doLint(Finder $finder, int &$processCount): array
+    {
+        $iterator = $finder->getIterator();
+
+        while ($iterator->valid()) {
+            $fileInfo = $iterator->current();
+
+            if ($this->cache->isHit($fileInfo->getRealPath())) {
+                $this->results['hits'][] = $fileInfo;
+            } else {
+                $this->results['misses'][] = $fileInfo;
             }
 
-            foreach ($running as $filename => $item) {
-                /** @var Lint $lint */
-                $lint = $item['process'];
+            $iterator->next();
+        }
+        unset($iterator);
 
-                if ($lint->isRunning()) {
-                    continue;
-                }
+        if (version_compare(phpversion(), '8.3', 'ge')) {
+            $chunkSize = $this->processLimit;
+        } else {
+            $chunkSize = 1;
+        }
+        $chunks = array_chunk($this->results['misses'], $chunkSize);
+        $processRunning = [];
 
-                unset($running[$filename]);
+        /** @var ?ProcessHelper $helper */
+        $helper = $this->helperSet?->has('process') ? $this->helperSet?->get('process') : null;  // @phpstan-ignore-line
 
-                if ($lint->hasSyntaxError()) {
-                    $processCallback('error', $item['file']);
-                    $errors[$filename] = array_merge(['file' => $filename, 'file_name' => $item['relativePath']], $lint->getSyntaxError());
-                } elseif ($this->warning && $lint->hasSyntaxIssue()) {
-                    $processCallback('warning', $item['file']);
-                    $errors[$filename] = array_merge(['file' => $filename, 'file_name' => $item['relativePath']], $lint->getSyntaxIssue());
-                } else {
-                    $newCache[$item['relativePath']] = md5_file($filename);
-                    $processCallback('ok', $item['file']);
-                }
+        foreach ($chunks as $loop => $files) {
+            $lintProcess = $this->createLintProcess($files)
+                ->setHelper($helper)
+                ->setOutput($this->output)
+            ;
+            $lintProcess->begin();
+
+            // enqueue lint process as much as authorized by --jobs option (number of paralleled jobs to run)
+            ++$processCount;
+            $processRunning[$processCount] = $lintProcess;
+
+            while (count($processRunning) >= $this->processLimit || (!empty($processRunning) && $loop == count($chunks) - 1)) {
+                $this->checkProcessRunning($processRunning);
             }
         }
 
-        $cache && Cache::put($newCache);
-
-        return $errors;
+        return $this->results;
     }
 
-    public function setCache(array $cache = [])
+    /**
+     * @param array<int, LintProcess> $processRunning
+     * @throws InvalidArgumentException
+     */
+    private function checkProcessRunning(array &$processRunning): void
     {
-        $this->cache = $cache;
-    }
+        foreach ($processRunning as $pid => $lintProcess) {
+            if (!$lintProcess->isFinished()) {
+                // php lint process is still running in background, wait until it's finished
+                continue;
+            }
+            unset($processRunning[$pid]);
 
-    public function setMemoryLimit(string $limit)
-    {
-        $this->memoryLimit = $limit;
-    }
+            // checks status of all files linked at end of the php lint process
+            foreach ($lintProcess->getFiles() as $fileInfo) {
+                $this->dispatcher->dispatch(new BeforeLintFileEvent($this, ['file' => $fileInfo]));
 
-    public function getFiles(): array
-    {
-        if (empty($this->files)) {
-            foreach ($this->paths as $path) {
-                if (is_dir($path)) {
-                    $this->files = array_merge($this->files, $this->getFilesFromDir($path));
-                } elseif (is_file($path)) {
-                    $this->files[$path] = new SplFileInfo($path, $path, $path);
-                }
+                $status = $this->processFile($fileInfo, $lintProcess);
+
+                $this->dispatcher->dispatch(
+                    new AfterLintFileEvent($this, ['file' => $fileInfo, 'status' => $status])
+                );
             }
         }
-
-        return $this->files;
     }
 
-    protected function getFilesFromDir(string $dir): array
+    /**
+     * @throws InvalidArgumentException
+     */
+    private function processFile(SplFileInfo $fileInfo, LintProcess $lintProcess): string
     {
-        $finder = new Finder();
-        $finder->files()
-            ->ignoreUnreadableDirs()
-            ->ignoreVCS(true)
-            ->filter(function (SplFileInfo $file) {
-                return $file->isReadable();
-            })
-            ->in(realpath($dir));
+        $filename = $fileInfo->getRealPath();
 
-        array_map([$finder, 'name'], $this->extensions);
-        array_map([$finder, 'notPath'], $this->excludes);
+        $item = $lintProcess->getItem($fileInfo);
 
-        return iterator_to_array($finder);
-    }
+        if ($item->hasSyntaxError()) {
+            $status = 'error';
+        } elseif ($this->warning && $item->hasSyntaxWarning()) {
+            $status = 'warning';
+        } else {
+            $status = 'ok';
 
-    public function setFiles(array $files): static
-    {
-        foreach ($files as $file) {
-            if (is_file($file)) {
-                $file = new SplFileInfo($file, $file, $file);
-            }
-
-            if (!($file instanceof SplFileInfo)) {
-                throw new InvalidArgumentException("File $file not exists.");
-            }
-
-            $this->files[$file->getRealPath()] = $file;
+            $item = $this->cache->getItem($filename);
+            $item->set(md5_file($filename));
+            $this->cache->saveItem($item);
         }
 
-        return $this;
+        if ($status !== 'ok') {
+            $this->results[$status . 's'][$filename] = [
+                'absolute_file' => $filename,
+                'relative_file' => $item->getFileInfo()->getRelativePathname(),
+                'error' => $item->getMessage(),
+                'line' => $item->getLine(),
+            ];
+        }
+
+        return $status;
     }
 
-    public function setProcessCallback(callable $processCallback): static
-    {
-        $this->processCallback = \Closure::fromCallable($processCallback);
-
-        return $this;
-    }
-
-    public function setProcessLimit(int $processLimit): static
-    {
-        $this->processLimit = $processLimit;
-
-        return $this;
-    }
-
-    protected function createLintProcess(string $filename): Lint
+    private function createLintProcess(array $files): LintProcess
     {
         $command = [
             PHP_SAPI == 'cli' ? PHP_BINARY : PHP_BINDIR . '/php',
@@ -173,8 +251,8 @@ class Linter
         }
 
         $command[] = '-l';
-        $command[] = $filename;
+        array_push($command, ...$files);
 
-        return new Lint($command);
+        return (new LintProcess($command))->setFiles($files);
     }
 }

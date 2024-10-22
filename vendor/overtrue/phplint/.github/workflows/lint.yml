@@ -2,19 +2,44 @@ name: CI
 
 on:
   push:
-    branches: [ "8.0" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "8.0" ]
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    runs-on: "${{ matrix.operating-system }}"
 
-    - name: Checking PHP syntax error
-      uses: overtrue/phplint@8.0
-      with:
-        path: .
-        options: --exclude=*.log
+    strategy:
+      fail-fast: false
+
+      matrix:
+        operating-system:
+          - "ubuntu-22.04"
+
+        php-version:
+          - "8.2"
+          - "8.3"
+
+    steps:
+      -   # https://github.com/actions/checkout
+        name: Checkout code
+        uses: actions/checkout@v4
+
+      -   # https://github.com/shivammathur/setup-php
+        name: Setup PHP runtime
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "${{ matrix.php-version }}"
+          coverage: "none"
+
+      -   # https://github.com/ramsey/composer-install
+        name: Install Composer dependencies
+        uses: ramsey/composer-install@v3
+        with:
+          composer-options: "--prefer-dist --no-scripts"
+
+      -   # https://github.com/sebastianbergmann/phpunit/tree/10.5
+        name: Unit tests with PHPUnit 10
+        run: vendor/bin/phpunit --no-progress --testdox --do-not-cache-result
