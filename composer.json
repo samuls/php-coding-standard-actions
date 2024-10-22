@@ -1,12 +1,17 @@
 {
-    "name": "samuls/php-coding-standard-actions",
+    "name": "Samuls/PhpCodeStandards",
     "description": "Support tools for check php coding standards.",
     "type": "composer-plugin",
     "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Samuls\\PhpCodeStandards\\": "src/"
+        }
+    },
     "scripts": {
         "lint": "phplint --no-cache src/",
-        "phpcs": "phpcs --standard=PSR12 src/ tests/",
-        "phpcbf": "phpcbf --standard=PSR12 src/ tests/",
+        "phpcs": "phpcs --standard=PSR12 src/",
+        "phpcbf": "phpcbf --standard=PSR12 src/",
         "test": "phpunit tests/"
     },
     "require": {
