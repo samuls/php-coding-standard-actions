@@ -1,24 +1,15 @@
 <?php return array(
     'root' => array(
-        'name' => '__root__',
+        'name' => 'samuls/php-coding-standard-actions',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '71752001eeb61c6db2f703b65b1210a81f72182c',
-        'type' => 'library',
+        'reference' => '4b8d767bee0176c6cde8c349220c682730568b73',
+        'type' => 'composer-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
         'dev' => true,
     ),
     'versions' => array(
-        '__root__' => array(
-            'pretty_version' => 'dev-main',
-            'version' => 'dev-main',
-            'reference' => '71752001eeb61c6db2f703b65b1210a81f72182c',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../../',
-            'aliases' => array(),
-            'dev_requirement' => false,
-        ),
         'composer/ca-bundle' => array(
             'pretty_version' => '1.5.2',
             'version' => '1.5.2.0',
@@ -303,6 +294,15 @@
             'install_path' => __DIR__ . '/../react/promise',
             'aliases' => array(),
             'dev_requirement' => true,
+        ),
+        'samuls/php-coding-standard-actions' => array(
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => '4b8d767bee0176c6cde8c349220c682730568b73',
+            'type' => 'composer-plugin',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'dev_requirement' => false,
         ),
         'sebastian/cli-parser' => array(
             'pretty_version' => '1.0.2',
