@@ -30,6 +30,12 @@ jobs:
       if: steps.composer-cache.outputs.cache-hit != 'true'
       run: composer install --prefer-dist --no-progress --ignore-platform-reqs
 
+    - name: PHP Code Sniffer
+      uses: php-actions/phpcs@v1
+      with:
+          path: src/
+          standard: phpcs.xml
+
     - name: Run lint
       run: composer lint
 
