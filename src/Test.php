@@ -1,5 +1,9 @@
 <?php
 
+namespace // empty namespace means global
+{
+}
+
 class Test
 {
     protected const PHP_VERSION = 5;
