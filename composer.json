@@ -10,6 +10,13 @@
         "test": "phpunit tests/"
     },
     "require": {
-    "php": "8.1.2"
+        "php": "^8.1.2"
+    },
+    "require-dev": {
+        "composer/composer": "^2.8",
+        "overtrue/phplint": "^9.5",
+        "phpspec/prophecy": "^1.19",
+        "phpunit/phpunit": "^11.4",
+        "squizlabs/php_codesniffer": "^3.10"
     }
 }
