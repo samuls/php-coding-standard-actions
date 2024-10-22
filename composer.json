@@ -1,12 +1,21 @@
 {
-    "name": "samuls/phpcodestandards",
+    "name": "samuls/php-coding-standard-actions",
     "description": "Support tools for check php coding standards.",
     "type": "composer-plugin",
     "license": "MIT",
+    "require": {
+        "php": "^7.3||^8.1.2"
+    },
     "autoload": {
         "psr-4": {
             "Samuls\\PhpCodeStandards\\": "src/"
         }
+    },
+    "require-dev": {
+        "overtrue/phplint": "9.1.x-dev",
+        "composer/composer": "^2.8",
+        "phpunit/phpunit": "^11.4",
+        "squizlabs/php_codesniffer": "^3.10"
     },
     "scripts": {
         "lint": "phplint --no-cache src/",
@@ -14,13 +23,4 @@
         "phpcbf": "phpcbf --standard=PSR12 src/",
         "test": "phpunit tests/"
     },
-    "require": {
-        "php": "^7.3||^8.1.2"
-    },
-    "require-dev": {
-        "overtrue/phplint": "9.1.x-dev",
-        "composer/composer": "^2.8",
-        "phpunit/phpunit": "^11.4",
-        "squizlabs/php_codesniffer": "^3.10"
-    }
 }
