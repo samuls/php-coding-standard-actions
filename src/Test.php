@@ -1,5 +1,7 @@
 <?php
 
+namespace Vendor\Model;
+
 class Test
 {
     protected const PHP_VERSION = 5;
