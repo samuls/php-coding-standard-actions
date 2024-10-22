@@ -41,4 +41,10 @@
     <!-- The closing ?> tag MUST be omitted from files containing only PHP. -->
     <rule ref="Zend.Files.ClosingTag"/>
     <rule ref="Zend.NamingConventions.ValidVariableName"/>
+    <rule ref="Zend.NamingConventions.ValidVariableName.PublicHasUnderscore">
+        <severity>0</severity>
+    </rule>
+    <rule ref="Zend.NamingConventions.ValidVariableName.PrivateNoUnderscore">
+        <severity>0</severity>
+    </rule>
 </ruleset>
