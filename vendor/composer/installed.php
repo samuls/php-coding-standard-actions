@@ -3,7 +3,7 @@
         'name' => 'samuls/php-coding-standard-actions',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '827e59b4d6536347536244ffa18fdeedd97e58d3',
+        'reference' => 'f36f9e8494307d3b9148e63d9e516e3544132298',
         'type' => 'composer-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -325,7 +325,7 @@
         'samuls/php-coding-standard-actions' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '827e59b4d6536347536244ffa18fdeedd97e58d3',
+            'reference' => 'f36f9e8494307d3b9148e63d9e516e3544132298',
             'type' => 'composer-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
