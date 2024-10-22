@@ -11,7 +11,7 @@
     },
     "require-dev": {
         "composer/composer": "^2.8",
-        "overtrue/phplint": "8.2.x-dev",
+        "overtrue/phplint": "6.1.0",
         "phpspec/prophecy": "^1.19",
         "phpunit/phpunit": "10.0",
         "squizlabs/php_codesniffer": "^3.10"
