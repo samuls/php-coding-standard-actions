@@ -37,6 +37,7 @@
 
     <!-- Method arguments with default values MUST go at the end of the argument list. -->
     <rule ref="PEAR.Functions.ValidDefaultValue"/>
+    <rule ref="PEAR.NamingConventions.ValidFunctionName"/>
 
     <!-- The closing ?> tag MUST be omitted from files containing only PHP. -->
     <rule ref="Zend.Files.ClosingTag"/>

@@ -1,6 +1,6 @@
 <?php
 
-function addition_of_two_number($a, $b)
+function calAdditionOfTwoNumbers($a, $b)
 {
     return $a + $b;
 }
