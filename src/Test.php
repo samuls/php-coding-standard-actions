@@ -9,6 +9,5 @@ class Test
     protected function getPhpVersion()
     {
         return self::PHP_VERSION;
-    } // end getPhpVersion
-
+    }
 }
