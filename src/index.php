@@ -6,4 +6,4 @@ echo "welcome ZXXxx";
 $firstVariable = 10;
 echo $firstVariable;
 
-echo calAdditionOfTwoNumbers($firstVariable, 20);
+echo addition_of_two_number(10, 20);
